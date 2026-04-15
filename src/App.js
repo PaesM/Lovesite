@@ -12,7 +12,7 @@ import {
 } from "firebase/firestore";
 
 // ================= NAVBAR =================
-function Navbar() {
+function Navbar({ onBeat }) {
   const audioRef = useRef(null);
   const [playing, setPlaying] = useState(false);
   const [started, setStarted] = useState(false);
@@ -58,6 +58,7 @@ function Navbar() {
 
             if (!playing) {
               audioRef.current.play();
+              onBeat?.(); 
             } else {
               audioRef.current.pause();
             }
@@ -118,17 +119,13 @@ const uploadToCloudinary = async (file) => {
 };
 
 // ================= 💥 BURST SYSTEM (360°) =================
-function random(min, max) {
-  return Math.random() * (max - min) + min;
-}
-
 function createBurst(x, y) {
   const particles = [];
-  const count = 18;
+  const count = 14; // smaller, cleaner burst
 
   for (let i = 0; i < count; i++) {
-    const angle = (Math.PI * 2 * i) / count;
-    const speed = random(80, 220);
+    const angle = (Math.PI * 2 * i) / count; // perfect circle
+    const speed = random(60, 160); // smaller explosion
 
     particles.push({
       id: Math.random(),
@@ -136,7 +133,7 @@ function createBurst(x, y) {
       y,
       vx: Math.cos(angle) * speed,
       vy: Math.sin(angle) * speed,
-      size: random(12, 26),
+      size: random(10, 18), // smaller hearts
       symbol: Math.random() > 0.5 ? "❤️" : "✨"
     });
   }
@@ -153,14 +150,14 @@ export default function App() {
   // 💌 SECRET STATES (RESTORED)
   const [showSecret, setShowSecret] = useState(false);
   const [secretNote, setSecretNote] = useState("");
-
   const [newMoment, setNewMoment] = useState({
     title: "",
     description: "",
     image: null,
     date: ""
   });
-
+  const [beat, setBeat] = useState(false);
+  
   // ================= SAVE SECRET =================
   useEffect(() => {
     const saved = localStorage.getItem("secretNote");
@@ -255,10 +252,12 @@ export default function App() {
       style={{
         fontFamily: "'Minimo', sans-serif",
         color: "#333",
-        overflow: "hidden"
+        overflow: "hidden",
+        transform: beat ? "scale(1.01)" : "scale(1)",
+        transition: "transform 0.4s ease"
       }}
     >
-      <Navbar />
+      <Navbar onBeat={() => setBeat(true)} />
 
       {/* 💥 BURSTS */}
       <AnimatePresence>
