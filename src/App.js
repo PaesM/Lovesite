@@ -12,27 +12,61 @@ import {
 } from "firebase/firestore";
 
 // ================= NAVBAR =================
+import { useRef, useState } from "react";
+
 function Navbar() {
+  const audioRef = useRef(null);
+  const [playing, setPlaying] = useState(false);
+
   return (
-    <nav
-      style={{
-        position: "fixed",
-        top: 0,
-        width: "100%",
-        padding: "15px",
-        display: "flex",
-        justifyContent: "center",
-        gap: "30px",
-        background: "rgba(255,255,255,0.2)",
-        backdropFilter: "blur(15px)",
-        zIndex: 1000,
-        borderBottom: "1px solid rgba(255,255,255,0.3)",
-        fontFamily: "'Minimo', sans-serif"
-      }}
-    >
-      <a href="#home">Home</a>
-      <a href="#moments">Our Moments</a>
-    </nav>
+    <>
+      <audio ref={audioRef} loop>
+        <source src="/music.mp3" type="audio/mpeg" />
+      </audio>
+
+      <nav
+        style={{
+          position: "fixed",
+          top: 0,
+          width: "100%",
+          padding: "15px",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          gap: "30px",
+          background: "rgba(255,255,255,0.2)",
+          backdropFilter: "blur(15px)",
+          zIndex: 1000,
+          borderBottom: "1px solid rgba(255,255,255,0.3)",
+          fontFamily: "'Minimo', sans-serif"
+        }}
+      >
+        <a href="#home">Home</a>
+        <a href="#moments">Our Moments</a>
+
+        {/* MUSIC BUTTON */}
+        <button
+          onClick={() => {
+            if (!playing) {
+              audioRef.current.play();
+            } else {
+              audioRef.current.pause();
+            }
+            setPlaying(!playing);
+          }}
+          style={{
+            marginLeft: "20px",
+            padding: "6px 12px",
+            borderRadius: "10px",
+            border: "none",
+            cursor: "pointer",
+            background: "white"
+          }}
+        >
+          {playing ? "Pause 🎵" : "Play 🎵"}
+        </button>
+      </nav>
+    </>
   );
 }
 
