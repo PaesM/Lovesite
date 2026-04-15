@@ -15,6 +15,15 @@ import {
 function Navbar() {
   const audioRef = useRef(null);
   const [playing, setPlaying] = useState(false);
+  const [started, setStarted] = useState(false);
+
+  const startMusic = () => {
+    if (!started && audioRef.current) {
+      audioRef.current.play().catch(() => {});
+      setPlaying(true);
+      setStarted(true);
+    }
+  };
 
   return (
     <>
@@ -23,6 +32,7 @@ function Navbar() {
       </audio>
 
       <nav
+        onClick={startMusic}
         style={{
           position: "fixed",
           top: 0,
@@ -42,23 +52,16 @@ function Navbar() {
         <a href="#home">Home</a>
         <a href="#moments">Our Moments</a>
 
-        {/* MUSIC BUTTON */}
         <button
-          onClick={() => {
+          onClick={(e) => {
+            e.stopPropagation();
+
             if (!playing) {
               audioRef.current.play();
             } else {
               audioRef.current.pause();
             }
             setPlaying(!playing);
-          }}
-          style={{
-            marginLeft: "20px",
-            padding: "6px 12px",
-            borderRadius: "10px",
-            border: "none",
-            cursor: "pointer",
-            background: "white"
           }}
         >
           {playing ? "Pause 🎵" : "Play 🎵"}
