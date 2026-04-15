@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 // Firebase (ONLY Firestore now)
@@ -12,8 +12,6 @@ import {
 } from "firebase/firestore";
 
 // ================= NAVBAR =================
-import { useRef, useState } from "react";
-
 function Navbar() {
   const audioRef = useRef(null);
   const [playing, setPlaying] = useState(false);
