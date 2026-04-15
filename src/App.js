@@ -351,7 +351,8 @@ export default function App() {
             <div key={m.id} style={{ position: "relative" }}>
               <img
                 src={m.image}
-                style={{ width: "100%", height: 200, objectFit: "cover" }}
+                alt={m.title || "moment image"}
+               style={{ width: "100%", height: 200, objectFit: "cover" }}
               />
 
               <h3>{m.title}</h3>
