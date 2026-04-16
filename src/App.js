@@ -8,7 +8,9 @@ import {
   addDoc,
   getDocs,
   deleteDoc,
-  doc
+  doc,
+  getDoc,
+  setDoc
 } from "firebase/firestore";
 
 // ================= NAVBAR =================
@@ -152,27 +154,40 @@ export default function App() {
   const [bursts, setBursts] = useState([]);
 
   const [showSecret, setShowSecret] = useState(false);
-  const [secretNote, setSecretNote] = useState("");
-  const [selectedImageIndex, setSelectedImageIndex] = useState(null); // ✅ UPDATED
+  const [role, setRole] = useState("M");
 
+const [secretNotes, setSecretNotes] = useState({
+  M: "",
+  K: ""
+});
+  const [selectedImageIndex, setSelectedImageIndex] = useState(null);
   const [newMoment, setNewMoment] = useState({
     title: "",
     description: "",
     image: null,
     date: ""
   });
-
-  useEffect(() => {
-    if (showSecret) {
-      const saved = localStorage.getItem("secretNote");
-      if (saved) setSecretNote(saved);
+useEffect(() => {
+  const fetchNotes = async () => {
+    const ref = doc(db, "secret", "notes");
+    const snap = await getDoc(ref);
+    if (snap.exists()) {
+      setSecretNotes(snap.data());
+    } else {
+      await setDoc(ref, { M: "", K: "" });
     }
-  }, [showSecret]);
-
-  useEffect(() => {
-    localStorage.setItem("secretNote", secretNote);
-  }, [secretNote]);
-
+  };
+  fetchNotes();
+}, []);
+const updateNote = async (value) => {
+  const updated = {
+    ...secretNotes,
+    [role]: value
+  };
+  setSecretNotes(updated);
+  const ref = doc(db, "secret", "notes");
+  await setDoc(ref, updated, { merge: true });
+};
   const handleClick = (e) => {
     const newBurst = createBurst(e.clientX, e.clientY);
     setBursts((prev) => [...prev, ...newBurst]);
@@ -183,7 +198,6 @@ export default function App() {
       );
     }, 1200);
   };
-
   useEffect(() => {
     const fetchMoments = async () => {
       try {
@@ -486,57 +500,91 @@ export default function App() {
         </div>
       </section>
 
-      {/* SECRET */}
-      <AnimatePresence>
-        {showSecret && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            style={{
-              position: "fixed",
-              inset: 0,
-              background: "linear-gradient(135deg, #80b3c7, #bfe9ff)",
-              zIndex: 9999,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              padding: 40
-            }}
-          >
-            <h1 style={{ color: "white" }}>💌 Things I Love About You</h1>
+      {/* ROLE BUTTON (TOP RIGHT) */}
+<button
+  onClick={() => setRole(role === "M" ? "K" : "M")}
+  style={{
+    position: "fixed",
+    top: 15,
+    right: 15,
+    zIndex: 9999,
+    padding: "10px 15px",
+    borderRadius: 10,
+    border: "none",
+    cursor: "pointer",
+    background: role === "M" ? "#ff4d6d" : "#4d79ff",
+    color: "white",
+    fontWeight: "bold"
+  }}
+>
+  {role}
+</button>
 
-            <textarea
-              value={secretNote}
-              onChange={(e) => setSecretNote(e.target.value)}
-              style={{
-                width: "100%",
-                maxWidth: 600,
-                height: 300,
-                padding: 15,
-                borderRadius: 15,
-                border: "none",
-                outline: "none",
-                marginTop: 20
-              }}
-            />
+{/* SECRET */}
+<AnimatePresence>
+  {showSecret && (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      style={{
+        position: "fixed",
+        inset: 0,
+        background: "linear-gradient(135deg, #80b3c7, #bfe9ff)",
+        zIndex: 9999,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: 40
+      }}
+    >
+      <h1 style={{ color: "white" }}>💌 Things I Love About You</h1>
 
-            <button
-              onClick={() => setShowSecret(false)}
-              style={{
-                marginTop: 20,
-                padding: "10px 20px",
-                borderRadius: 10,
-                border: "none",
-                cursor: "pointer"
-              }}
-            >
-              Close
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* VIEW BOTH NOTES */}
+      <div style={{ display: "flex", gap: 40, marginTop: 20 }}>
+        <div style={{ color: "white" }}>
+          <h3>M Note</h3>
+          <p>{secretNotes.M || "..."}</p>
+        </div>
+
+        <div style={{ color: "white" }}>
+          <h3>K Note</h3>
+          <p>{secretNotes.K || "..."}</p>
+        </div>
+      </div>
+
+      {/* ONLY EDIT OWN NOTE */}
+      <textarea
+        value={secretNotes[role] || ""}
+        onChange={(e) => updateNote(e.target.value)}
+        style={{
+          width: "100%",
+          maxWidth: 600,
+          height: 300,
+          padding: 15,
+          borderRadius: 15,
+          border: "none",
+          outline: "none",
+          marginTop: 20
+        }}
+      />
+
+      <button
+        onClick={() => setShowSecret(false)}
+        style={{
+          marginTop: 20,
+          padding: "10px 20px",
+          borderRadius: 10,
+          border: "none",
+          cursor: "pointer"
+        }}
+      >
+        Close
+      </button>
+    </motion.div>
+  )}
+</AnimatePresence>
 
       <Footer onOpenSecret={() => setShowSecret(true)} />
     </main>
