@@ -12,7 +12,7 @@ import {
 } from "firebase/firestore";
 
 // ================= NAVBAR =================
-function Navbar({ onBeat }) {
+function Navbar() {
   const audioRef = useRef(null);
   const [playing, setPlaying] = useState(false);
   const [started, setStarted] = useState(false);
@@ -58,10 +58,10 @@ function Navbar({ onBeat }) {
 
             if (!playing) {
               audioRef.current.play();
-              onBeat?.(); 
             } else {
               audioRef.current.pause();
             }
+
             setPlaying(!playing);
           }}
         >
@@ -118,14 +118,18 @@ const uploadToCloudinary = async (file) => {
   }
 };
 
-// ================= 💥 BURST SYSTEM (360°) =================
+// ================= BURST SYSTEM =================
+function random(min, max) {
+  return Math.random() * (max - min) + min;
+}
+
 function createBurst(x, y) {
   const particles = [];
-  const count = 14; // smaller, cleaner burst
+  const count = 16;
 
   for (let i = 0; i < count; i++) {
-    const angle = (Math.PI * 2 * i) / count; // perfect circle
-    const speed = random(60, 160); // smaller explosion
+    const angle = (Math.PI * 2 * i) / count;
+    const speed = random(70, 180);
 
     particles.push({
       id: Math.random(),
@@ -133,7 +137,7 @@ function createBurst(x, y) {
       y,
       vx: Math.cos(angle) * speed,
       vy: Math.sin(angle) * speed,
-      size: random(10, 18), // smaller hearts
+      size: random(10, 16),
       symbol: Math.random() > 0.5 ? "❤️" : "✨"
     });
   }
@@ -147,7 +151,6 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [bursts, setBursts] = useState([]);
 
-  // 💌 SECRET STATES (RESTORED)
   const [showSecret, setShowSecret] = useState(false);
   const [secretNote, setSecretNote] = useState("");
   const [newMoment, setNewMoment] = useState({
@@ -156,9 +159,7 @@ export default function App() {
     image: null,
     date: ""
   });
-  const [beat, setBeat] = useState(false);
-  
-  // ================= SAVE SECRET =================
+
   useEffect(() => {
     const saved = localStorage.getItem("secretNote");
     if (saved) setSecretNote(saved);
@@ -168,7 +169,6 @@ export default function App() {
     localStorage.setItem("secretNote", secretNote);
   }, [secretNote]);
 
-  // ================= CLICK EFFECT =================
   const handleClick = (e) => {
     const newBurst = createBurst(e.clientX, e.clientY);
     setBursts((prev) => [...prev, ...newBurst]);
@@ -180,7 +180,6 @@ export default function App() {
     }, 1200);
   };
 
-  // ================= FETCH =================
   useEffect(() => {
     const fetchMoments = async () => {
       try {
@@ -202,7 +201,6 @@ export default function App() {
     fetchMoments();
   }, []);
 
-  // ================= ADD MOMENT =================
   const handleAddMoment = async () => {
     if (!newMoment.image || !newMoment.date) return;
 
@@ -233,7 +231,6 @@ export default function App() {
     });
   };
 
-  // ================= DELETE =================
   const deleteMoment = async (id) => {
     await deleteDoc(doc(db, "moments", id));
     setMoments((prev) => prev.filter((m) => m.id !== id));
@@ -253,11 +250,11 @@ export default function App() {
         fontFamily: "'Minimo', sans-serif",
         color: "#333",
         overflow: "hidden",
-        transform: beat ? "scale(1.01)" : "scale(1)",
-        transition: "transform 0.4s ease"
+        transform: "none",
+        transition: "transform 0.15s ease"
       }}
     >
-      <Navbar onBeat={() => setBeat(true)} />
+      <Navbar />
 
       {/* 💥 BURSTS */}
       <AnimatePresence>
@@ -292,7 +289,6 @@ export default function App() {
         style={{
           height: "100vh",
           display: "flex",
-          flexDirection: "column",
           justifyContent: "center",
           alignItems: "center",
           background: "linear-gradient(135deg, #a9c8f0, #9f9ef5)",
@@ -300,141 +296,91 @@ export default function App() {
         }}
       >
         <h1>Hi Langga ❤️</h1>
-        <p>This is our little world.</p>
       </section>
 
       {/* MOMENTS */}
       <section style={{ padding: "40px", background: "#fff5f7" }}>
         <h1>Our Moments ❤️</h1>
 
-        <input
-          placeholder="Title"
-          value={newMoment.title}
-          onChange={(e) =>
-            setNewMoment({ ...newMoment, title: e.target.value })
-          }
-        />
+        <input placeholder="Title" value={newMoment.title}
+          onChange={(e) => setNewMoment({ ...newMoment, title: e.target.value })} />
 
-        <input
-          type="date"
-          value={newMoment.date}
-          onChange={(e) =>
-            setNewMoment({ ...newMoment, date: e.target.value })
-          }
-        />
+        <input type="date" value={newMoment.date}
+          onChange={(e) => setNewMoment({ ...newMoment, date: e.target.value })} />
 
-        <input
-          placeholder="Description"
-          value={newMoment.description}
-          onChange={(e) =>
-            setNewMoment({ ...newMoment, description: e.target.value })
-          }
-        />
+        <input placeholder="Description" value={newMoment.description}
+          onChange={(e) => setNewMoment({ ...newMoment, description: e.target.value })} />
 
-        <input
-          type="file"
-          onChange={(e) =>
-            setNewMoment({ ...newMoment, image: e.target.files[0] })
-          }
-        />
+        <input type="file"
+          onChange={(e) => setNewMoment({ ...newMoment, image: e.target.files[0] })} />
 
         <button onClick={handleAddMoment}>Add ❤️</button>
 
         {loading && <p>Loading...</p>}
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
-            gap: 20
-          }}
-        >
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: 20 }}>
           {moments.map((m) => (
-            <div key={m.id} style={{ position: "relative" }}>
-              <img
-                src={m.image}
-                alt={m.title || "moment image"}
-               style={{ width: "100%", height: 200, objectFit: "cover" }}
-              />
-
+            <div key={m.id}>
+              <img src={m.image} alt={m.title} style={{ width: "100%", height: 200, objectFit: "cover" }} />
               <h3>{m.title}</h3>
               <small>{m.date}</small>
-
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  deleteMoment(m.id);
-                }}
-                style={{
-                  marginTop: 8,
-                  background: "red",
-                  color: "white",
-                  border: "none",
-                  padding: "5px 10px",
-                  borderRadius: 8,
-                  cursor: "pointer"
-                }}
-              >
-                Delete
-              </button>
+              <button onClick={() => deleteMoment(m.id)}>Delete</button>
             </div>
           ))}
         </div>
       </section>
 
-      {/* 💌 SECRET SECTION */}
-      <AnimatePresence>
-        {showSecret && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            style={{
-              position: "fixed",
-              inset: 0,
-              background: "linear-gradient(135deg, #80b3c7, #bfe9ff)",
-              zIndex: 9999,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              padding: 40
-            }}
-          >
-            <h1 style={{ color: "white" }}>
-              💌 Things I Love About You
-            </h1>
+      {/* SECRET */}
+<AnimatePresence>
+  {showSecret && (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      style={{
+        position: "fixed",
+        inset: 0,
+        background: "linear-gradient(135deg, #80b3c7, #bfe9ff)",
+        zIndex: 9999,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: 40
+      }}
+    >
+      <h1 style={{ color: "white" }}>💌 Things I Love About You</h1>
 
-            <textarea
-              value={secretNote}
-              onChange={(e) => setSecretNote(e.target.value)}
-              style={{
-                width: "100%",
-                maxWidth: 600,
-                height: 300,
-                padding: 15,
-                borderRadius: 15,
-                border: "none",
-                outline: "none",
-                marginTop: 20
-              }}
-            />
+      <textarea
+        value={secretNote}
+        onChange={(e) => setSecretNote(e.target.value)}
+        style={{
+          width: "100%",
+          maxWidth: 600,
+          height: 300,
+          padding: 15,
+          borderRadius: 15,
+          border: "none",
+          outline: "none",
+          marginTop: 20
+        }}
+      />
 
-            <button
-              onClick={() => setShowSecret(false)}
-              style={{
-                marginTop: 20,
-                padding: "10px 20px",
-                borderRadius: 10,
-                border: "none",
-                cursor: "pointer"
-              }}
-            >
-              Close
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <button
+        onClick={() => setShowSecret(false)}
+        style={{
+          marginTop: 20,
+          padding: "10px 20px",
+          borderRadius: 10,
+          border: "none",
+          cursor: "pointer"
+        }}
+      >
+        Close
+      </button>
+    </motion.div>
+  )}
+</AnimatePresence>
 
       <Footer onOpenSecret={() => setShowSecret(true)} />
     </main>
