@@ -153,6 +153,8 @@ export default function App() {
 
   const [showSecret, setShowSecret] = useState(false);
   const [secretNote, setSecretNote] = useState("");
+  const [selectedImageIndex, setSelectedImageIndex] = useState(null); // ✅ UPDATED
+
   const [newMoment, setNewMoment] = useState({
     title: "",
     description: "",
@@ -161,9 +163,11 @@ export default function App() {
   });
 
   useEffect(() => {
-    const saved = localStorage.getItem("secretNote");
-    if (saved) setSecretNote(saved);
-  }, []);
+    if (showSecret) {
+      const saved = localStorage.getItem("secretNote");
+      if (saved) setSecretNote(saved);
+    }
+  }, [showSecret]);
 
   useEffect(() => {
     localStorage.setItem("secretNote", secretNote);
@@ -283,6 +287,106 @@ export default function App() {
         ))}
       </AnimatePresence>
 
+      {/* IMAGE VIEWER (SWIPE GALLERY) */}
+      <AnimatePresence>
+  {selectedImageIndex !== null && (
+    <motion.div
+      onClick={() => setSelectedImageIndex(null)}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      style={{
+        position: "fixed",
+        inset: 0,
+        background: "rgba(0,0,0,0.9)",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        zIndex: 9999
+      }}
+    >
+      {/* ✅ CLOSE BUTTON (NEW) */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation(); // prevents closing + swipe conflict
+          setSelectedImageIndex(null);
+        }}
+        style={{
+          position: "absolute",
+          top: 20,
+          right: 20,
+          zIndex: 10000,
+          padding: "10px 15px",
+          borderRadius: "8px",
+          border: "none",
+          cursor: "pointer",
+          background: "white",
+          fontWeight: "bold"
+        }}
+      >
+        Close ✖
+      </button>
+
+      <motion.img
+        key={selectedImageIndex}
+        src={moments[selectedImageIndex]?.image}
+        drag="x"
+        dragConstraints={{ left: 0, right: 0 }}
+        onDragEnd={(e, info) => {
+          if (info.offset.x < -100) {
+            setSelectedImageIndex((prev) =>
+              prev < moments.length - 1 ? prev + 1 : prev
+            );
+          } else if (info.offset.x > 100) {
+            setSelectedImageIndex((prev) =>
+              prev > 0 ? prev - 1 : prev
+            );
+          }
+        }}
+        style={{
+          maxWidth: "90%",
+          maxHeight: "90%",
+          borderRadius: "10px"
+        }}
+      />
+
+      {/* LEFT CLICK */}
+      <div
+        onClick={(e) => {
+          e.stopPropagation();
+          setSelectedImageIndex((prev) =>
+            prev > 0 ? prev - 1 : prev
+          );
+        }}
+        style={{
+          position: "absolute",
+          left: 0,
+          top: 0,
+          width: "30%",
+          height: "100%"
+        }}
+      />
+
+      {/* RIGHT CLICK */}
+      <div
+        onClick={(e) => {
+          e.stopPropagation();
+          setSelectedImageIndex((prev) =>
+            prev < moments.length - 1 ? prev + 1 : prev
+          );
+        }}
+        style={{
+          position: "absolute",
+          right: 0,
+          top: 0,
+          width: "30%",
+          height: "100%"
+        }}
+      />
+    </motion.div>
+  )}
+</AnimatePresence>
+
       {/* HOME */}
       <section
         id="home"
@@ -319,68 +423,120 @@ export default function App() {
         {loading && <p>Loading...</p>}
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: 20 }}>
-          {moments.map((m) => (
-            <div key={m.id}>
-              <img src={m.image} alt={m.title} style={{ width: "100%", height: 200, objectFit: "cover" }} />
-              <h3>{m.title}</h3>
-              <small>{m.date}</small>
-              <button onClick={() => deleteMoment(m.id)}>Delete</button>
+          {moments.map((m, index) => (
+            <div
+              key={m.id}
+              style={{
+                background: "white",
+                borderRadius: "15px",
+                overflow: "hidden",
+                boxShadow: "0 5px 15px rgba(0,0,0,0.1)",
+                transition: "transform 0.2s ease",
+                cursor: "pointer"
+              }}
+            >
+              <img
+                src={m.image}
+                alt={m.title}
+                onClick={() => setSelectedImageIndex(index)} // ✅ UPDATED
+                style={{
+                  width: "100%",
+                  height: 200,
+                  objectFit: "cover"
+                }}
+              />
+
+              <div style={{ padding: "15px" }}>
+                <h3 style={{ marginBottom: "5px" }}>{m.title}</h3>
+                <small style={{ color: "#888" }}>{m.date}</small>
+
+                <p
+                  style={{
+                    marginTop: "10px",
+                    fontSize: "14px",
+                    lineHeight: "1.4",
+                    maxHeight: "60px",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis"
+                  }}
+                >
+                  {m.description}
+                </p>
+
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    deleteMoment(m.id);
+                  }}
+                  style={{
+                    marginTop: "10px",
+                    background: "#ff4d6d",
+                    color: "white",
+                    border: "none",
+                    padding: "6px 12px",
+                    borderRadius: "8px",
+                    cursor: "pointer"
+                  }}
+                >
+                  Delete
+                </button>
+              </div>
             </div>
           ))}
         </div>
       </section>
 
       {/* SECRET */}
-<AnimatePresence>
-  {showSecret && (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      style={{
-        position: "fixed",
-        inset: 0,
-        background: "linear-gradient(135deg, #80b3c7, #bfe9ff)",
-        zIndex: 9999,
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: 40
-      }}
-    >
-      <h1 style={{ color: "white" }}>💌 Things I Love About You</h1>
+      <AnimatePresence>
+        {showSecret && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{
+              position: "fixed",
+              inset: 0,
+              background: "linear-gradient(135deg, #80b3c7, #bfe9ff)",
+              zIndex: 9999,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: 40
+            }}
+          >
+            <h1 style={{ color: "white" }}>💌 Things I Love About You</h1>
 
-      <textarea
-        value={secretNote}
-        onChange={(e) => setSecretNote(e.target.value)}
-        style={{
-          width: "100%",
-          maxWidth: 600,
-          height: 300,
-          padding: 15,
-          borderRadius: 15,
-          border: "none",
-          outline: "none",
-          marginTop: 20
-        }}
-      />
+            <textarea
+              value={secretNote}
+              onChange={(e) => setSecretNote(e.target.value)}
+              style={{
+                width: "100%",
+                maxWidth: 600,
+                height: 300,
+                padding: 15,
+                borderRadius: 15,
+                border: "none",
+                outline: "none",
+                marginTop: 20
+              }}
+            />
 
-      <button
-        onClick={() => setShowSecret(false)}
-        style={{
-          marginTop: 20,
-          padding: "10px 20px",
-          borderRadius: 10,
-          border: "none",
-          cursor: "pointer"
-        }}
-      >
-        Close
-      </button>
-    </motion.div>
-  )}
-</AnimatePresence>
+            <button
+              onClick={() => setShowSecret(false)}
+              style={{
+                marginTop: 20,
+                padding: "10px 20px",
+                borderRadius: 10,
+                border: "none",
+                cursor: "pointer"
+              }}
+            >
+              Close
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <Footer onOpenSecret={() => setShowSecret(true)} />
     </main>
