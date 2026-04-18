@@ -19,6 +19,16 @@ function Navbar() {
   const [playing, setPlaying] = useState(false);
   const [started, setStarted] = useState(false);
 
+  const songs = [
+    { title: "Espresso", src: "/espresso.mp3" },
+    { title: "Needy", src: "/needy.mp3" },
+    { title: "Paragraphs", src: "/paragraphs.mp3" },
+    { title: "Seasons", src: "/seasons.mp3" },
+    { title: "Tiptoe", src: "/tiptoe.mp3" }
+  ];
+
+  const [currentSong, setCurrentSong] = useState(0);
+
   const startMusic = () => {
     if (!started && audioRef.current) {
       audioRef.current.play().catch(() => {});
@@ -30,7 +40,7 @@ function Navbar() {
   return (
     <>
       <audio ref={audioRef} loop>
-        <source src="/music.mp3" type="audio/mpeg" />
+        <source src={songs[currentSong].src} type="audio/mpeg" />
       </audio>
 
       <nav
@@ -51,43 +61,113 @@ function Navbar() {
           fontFamily: "'Minimo', sans-serif"
         }}
       >
-        <a href="#home">Home</a>
-        <a href="#moments">Our Moments</a>
+        <a href="#home">🏠︎ Home</a>
+        {/* 🎵 SONG SELECTOR */}
+        <select
+          value={currentSong}
+          onChange={(e) => {
+            const index = Number(e.target.value);
+            setCurrentSong(index);
 
+            const audio = audioRef.current;
+            audio.src = songs[index].src;
+            audio.play();
+            setPlaying(true);
+          }}
+          onClick={(e) => e.stopPropagation()}
+          style={{
+            padding: "5px 10px",
+            borderRadius: "8px",
+            border: "none",
+            outline: "none"
+          }}
+        >
+          {songs.map((song, i) => (
+            <option key={i} value={i}>
+              {song.title}
+            </option>
+          ))}
+        </select>
+
+        {/* ▶ PLAY / PAUSE */}
         <button
           onClick={(e) => {
             e.stopPropagation();
 
+            const audio = audioRef.current;
+
             if (!playing) {
-              audioRef.current.play();
+              audio.src = songs[currentSong].src;
+              audio.play();
             } else {
-              audioRef.current.pause();
+              audio.pause();
             }
 
             setPlaying(!playing);
           }}
+          onMouseEnter={(e) => {
+          e.target.style.transform = "scale(1.05)";
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.transform = "scale(1)";
+          }}
+          style={{
+          transition: "0.2s ease",
+          padding: "2px 8px",
+          borderRadius: "10px",
+          border: "none",
+          cursor: "pointer",
+          fontSize: "18px",
+          background: "rgba(255,255,255,0.8)",
+          backdropFilter: "blur(10px)",
+          fontFamily: "'Minimo', sans-serif"
+          }}
         >
-          {playing ? "Pause 🎵" : "Play 🎵"}
+          {playing ? "Pause ⏸" : "Play ▶"}
+        </button>
+
+        {/* ⏭ NEXT */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+
+            const next = (currentSong + 1) % songs.length;
+            setCurrentSong(next);
+
+            const audio = audioRef.current;
+            audio.src = songs[next].src;
+            audio.play();
+
+            setPlaying(true);
+          }}
+          onMouseEnter={(e) => {
+          e.target.style.transform = "scale(1.05)";
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.transform = "scale(1)";
+          }}
+          style={{
+          transition: "0.2s ease",
+          padding: "2px 8px",
+          borderRadius: "10px",
+          border: "none",
+          cursor: "pointer",
+          fontSize: "18px",
+          background: "rgba(255,255,255,0.8)",
+          backdropFilter: "blur(10px)",
+          fontFamily: "'Minimo', sans-serif"
+          }}
+        >
+          Next ⏭
         </button>
       </nav>
     </>
   );
 }
-
 // ================= FOOTER =================
-function Footer({ onOpenSecret }) {
+function Footer(){
   return (
-    <footer
-      onDoubleClick={onOpenSecret}
-      style={{
-        textAlign: "center",
-        padding: "30px",
-        marginTop: "50px",
-        opacity: 0.7,
-        cursor: "pointer"
-      }}
-    >
-      <p>Made with love ❤️ (double click me)</p>
+    <footer>
     </footer>
   );
 }
@@ -127,19 +207,24 @@ function random(min, max) {
 
 function createBurst(x, y) {
   const particles = [];
-  const count = 16;
+  const count = 14; // slightly smaller burst
 
   for (let i = 0; i < count; i++) {
-    const angle = (Math.PI * 2 * i) / count;
-    const speed = random(70, 180);
+    const angle = Math.random() * Math.PI * 2;
+
+    // 🔥 smaller explosion radius
+    const distance = random(20, 60);
 
     particles.push({
       id: Math.random(),
       x,
       y,
-      vx: Math.cos(angle) * speed,
-      vy: Math.sin(angle) * speed,
-      size: random(10, 16),
+
+      // final position target (radial explosion)
+      tx: x + Math.cos(angle) * distance,
+      ty: y + Math.sin(angle) * distance,
+
+      size: random(10, 14),
       symbol: Math.random() > 0.5 ? "❤️" : "✨"
     });
   }
@@ -152,15 +237,29 @@ export default function App() {
   const [moments, setMoments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [bursts, setBursts] = useState([]);
-
+  const startDate = new Date("2025-04-11"); 
+  const getDaysTogether = () => {
+  const now = new Date();
+  const diff = now - startDate;
+  return Math.floor(diff / (1000 * 60 * 60 * 24));
+  };
   const [showSecret, setShowSecret] = useState(false);
   const [role, setRole] = useState("M");
-
-const [secretNotes, setSecretNotes] = useState({
+  const [secretNotes, setSecretNotes] = useState({
   M: "",
   K: ""
-});
+  });
   const [selectedImageIndex, setSelectedImageIndex] = useState(null);
+  const theme = {
+  M: {
+    background: "#729ff3",
+    accent: "#ff4d6d"
+  },
+  K: {
+    background: "#ffb6c1",
+    accent: "#4d79ff"
+  }
+};
   const [newMoment, setNewMoment] = useState({
     title: "",
     description: "",
@@ -229,7 +328,8 @@ const updateNote = async (value) => {
       title: newMoment.title,
       description: newMoment.description,
       date: newMoment.date,
-      image: imageUrl
+      image: imageUrl,
+      uploadedBy: role
     });
 
     const snapshot = await getDocs(collection(db, "moments"));
@@ -253,7 +353,14 @@ const updateNote = async (value) => {
     await deleteDoc(doc(db, "moments", id));
     setMoments((prev) => prev.filter((m) => m.id !== id));
   };
-
+const cuteInput = {
+  padding: "10px",
+  borderRadius: "10px",
+  border: "1px solid #2e2b2b",
+  outline: "none",
+  fontSize: "14px",
+  background: "white"
+};
   return (
     <main
       onClick={(e) => {
@@ -265,11 +372,12 @@ const updateNote = async (value) => {
         }
       }}
       style={{
-        fontFamily: "'Minimo', sans-serif",
-        color: "#333",
-        overflow: "hidden",
-        transform: "none",
-        transition: "transform 0.15s ease"
+      fontFamily: "'Minimo', sans-serif",
+      color: "#333",
+      overflow: "hidden",
+      transform: "none",
+      transition: "background 0.8s ease, transform 0.15s ease",
+      background: theme[role].background
       }}
     >
       <Navbar />
@@ -278,27 +386,30 @@ const updateNote = async (value) => {
       <AnimatePresence>
         {bursts.map((b) => (
           <motion.div
-            key={b.id}
-            initial={{ opacity: 1, scale: 1 }}
-            animate={{
-              x: b.x + b.vx,
-              y: b.y + b.vy,
-              opacity: 0,
-              scale: 0
-            }}
-            transition={{ duration: 1 }}
-            style={{
-              position: "fixed",
-              left: b.x,
-              top: b.y,
-              fontSize: b.size,
-              pointerEvents: "none",
-              zIndex: 9999
-            }}
+          key={b.id}
+          initial={{ opacity: 1, scale: 1, x: b.x, y: b.y }}
+          animate={{
+            x: b.tx,
+            y: b.ty,
+            opacity: 0,
+            scale: 0.6
+          }}
+          transition={{
+            duration: 1.6, // 🐢 slow-mo feel
+            ease: "easeOut"
+          }}
+          style={{
+            position: "fixed",
+            left: 0,
+            top: 0,
+            fontSize: b.size,
+            pointerEvents: "none",
+            zIndex: 9999
+          }}
           >
             {b.symbol}
           </motion.div>
-        ))}
+  ))}
       </AnimatePresence>
 
       {/* IMAGE VIEWER (SWIPE GALLERY) */}
@@ -409,116 +520,241 @@ const updateNote = async (value) => {
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
-          background: "linear-gradient(135deg, #a9c8f0, #9f9ef5)",
+          background: "transparent",
           textAlign: "center"
         }}
       >
-        <h1>Hi Langga ❤️</h1>
+        <div>
+  <h1 style={{ fontSize: "75px", marginBottom: "10px" }}>
+    Langga ❤️
+  </h1>
+
+  <p style={{ fontSize: "50px", opacity: 0.8 }}>
+    ≽ ^⎚ ˕ ⎚^ ≼
+  </p>
+  <h2 style={{ fontSize: "30px", marginTop: "10px" }}>
+    We've been together for {getDaysTogether()} days 💕
+  </h2>
+</div>
       </section>
 
       {/* MOMENTS */}
-      <section style={{ padding: "40px", background: "#fff5f7" }}>
-        <h1>Our Moments ❤️</h1>
+        <section style={{ padding: "40px", background: "transparent" }}>
+  <h1 style={{ textAlign: "center", marginBottom: "20px" }}>
+    Our Moments ❤️
+  </h1>
 
-        <input placeholder="Title" value={newMoment.title}
-          onChange={(e) => setNewMoment({ ...newMoment, title: e.target.value })} />
+  {/* 💖 ADD MOMENT CARD */}
+      <div
+        style={{
+          maxWidth: "500px",
+          margin: "0 auto 30px auto",
+          padding: "20px",
+          borderRadius: "20px",
+          background: "rgba(255,255,255,0.7)",
+          backdropFilter: "blur(10px)",
+          boxShadow: "0 8px 25px rgba(0,0,0,0.1)",
+          display: "flex",
+          flexDirection: "column",
+          gap: "10px"
+        }}
+      >
+        <input
+          placeholder="💖 Title"
+          value={newMoment.title}
+          onChange={(e) =>
+            setNewMoment({ ...newMoment, title: e.target.value })
+          }
+          style={cuteInput}
+        />
 
-        <input type="date" value={newMoment.date}
-          onChange={(e) => setNewMoment({ ...newMoment, date: e.target.value })} />
+        <input
+          type="date"
+          value={newMoment.date}
+          onChange={(e) =>
+            setNewMoment({ ...newMoment, date: e.target.value })
+          }
+          style={cuteInput}
+        />
 
-        <input placeholder="Description" value={newMoment.description}
-          onChange={(e) => setNewMoment({ ...newMoment, description: e.target.value })} />
+        <input
+          placeholder="💌 Description"
+          value={newMoment.description}
+          onChange={(e) =>
+            setNewMoment({ ...newMoment, description: e.target.value })
+          }
+          style={cuteInput}
+        />
 
-        <input type="file"
-          onChange={(e) => setNewMoment({ ...newMoment, image: e.target.files[0] })} />
+        <input
+          type="file"
+          onChange={(e) =>
+            setNewMoment({ ...newMoment, image: e.target.files[0] })
+          }
+          style={{
+            padding: "10px",
+            borderRadius: "10px",
+            border: "1px solid #333131",
+            background: "white"
+          }}
+        />
 
-        <button onClick={handleAddMoment}>Add ❤️</button>
+        <button
+          onClick={handleAddMoment}
+          onMouseEnter={(e) => {
+          e.target.style.transform = "scale(1.05)";
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.transform = "scale(1)";
+          }}
+          style={{
+          transition: "0.2s ease",
+            marginTop: "10px",
+            background: "linear-gradient(135deg, #ff6fa3, #ff4d6d)",
+            color: "white",
+            border: "none",
+            padding: "10px",
+            borderRadius: "10px",
+            cursor: "pointer",
+            fontWeight: "bold"
+          }}
+        >
+          Add Moment 💕
+        </button>
+      </div>
 
-        {loading && <p>Loading...</p>}
+      {loading && <p style={{ textAlign: "center" }}>Loading...</p>}
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: 20 }}>
-          {moments.map((m, index) => (
-            <div
-              key={m.id}
-              style={{
-                background: "white",
-                borderRadius: "15px",
-                overflow: "hidden",
-                boxShadow: "0 5px 15px rgba(0,0,0,0.1)",
-                transition: "transform 0.2s ease",
-                cursor: "pointer"
-              }}
-            >
-              <img
-                src={m.image}
-                alt={m.title}
-                onClick={() => setSelectedImageIndex(index)} // ✅ UPDATED
-                style={{
-                  width: "100%",
-                  height: 200,
-                  objectFit: "cover"
+      {/* ✅ GRID (UNCHANGED — THIS HAS YOUR DELETE BUTTON) */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
+          gap: 20
+        }}
+      >
+        {moments.map((m, index) => (
+          <div
+            key={m.id}
+            style={{
+              background: "white",
+              borderRadius: "15px",
+              overflow: "hidden",
+              boxShadow: "0 5px 15px rgba(0,0,0,0.1)",
+              transition: "transform 0.2s ease",
+              cursor: "pointer"
+            }}
+          >
+            <img
+              src={m.image}
+              alt={m.title}
+              onClick={() => setSelectedImageIndex(index)}
+              onMouseEnter={(e) => {
+                e.target.style.transform = "scale(1.05)";
                 }}
-              />
+                onMouseLeave={(e) => {
+                  e.target.style.transform = "scale(1)";
+                }}
+                style={{
+                transition: "0.2s ease",
+                width: "100%",
+                height: 200,
+                objectFit: "cover"
+              }}
+            />
 
-              <div style={{ padding: "15px" }}>
-                <h3 style={{ marginBottom: "5px" }}>{m.title}</h3>
-                <small style={{ color: "#888" }}>{m.date}</small>
+            <div style={{ padding: "15px" }}>
+              <h3 style={{ marginBottom: "5px" }}>{m.title}</h3>
+              <small style={{ color: "#888" }}>{m.date}</small>
+              <small style={{ color: "#555", display: "block", marginTop: "4px" }}>
+                Uploaded by: <b>{m.uploadedBy}</b>
+              </small>
+              <p
+                style={{
+                  marginTop: "10px",
+                  fontSize: "14px",
+                  lineHeight: "1.4",
+                  maxHeight: "60px",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis"
+                }}
+              >
+                {m.description}
+              </p>
 
-                <p
+              {/* 🔥 DELETE BUTTON IS HERE */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  deleteMoment(m.id);
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.transform = "scale(1.05)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.transform = "scale(1)";
+                  }}
                   style={{
-                    marginTop: "10px",
-                    fontSize: "14px",
-                    lineHeight: "1.4",
-                    maxHeight: "60px",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis"
-                  }}
-                >
-                  {m.description}
-                </p>
-
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    deleteMoment(m.id);
-                  }}
-                  style={{
-                    marginTop: "10px",
-                    background: "#ff4d6d",
-                    color: "white",
-                    border: "none",
-                    padding: "6px 12px",
-                    borderRadius: "8px",
-                    cursor: "pointer"
-                  }}
-                >
-                  Delete
-                </button>
-              </div>
+                  transition: "0.2s ease",
+                  marginTop: "10px",
+                  background: "#ff4d6d",
+                  color: "white",
+                  border: "none",
+                  padding: "6px 12px",
+                  borderRadius: "8px",
+                  cursor: "pointer"
+                }}
+              >
+                Delete
+              </button>
             </div>
-          ))}
-        </div>
+          </div>
+        ))}
+      </div>
       </section>
 
-      {/* ROLE BUTTON (TOP RIGHT) */}
-<button
-  onClick={() => setRole(role === "M" ? "K" : "M")}
+      <div
   style={{
     position: "fixed",
     top: 15,
     right: 15,
-    zIndex: 9999,
-    padding: "10px 15px",
-    borderRadius: 10,
-    border: "none",
-    cursor: "pointer",
-    background: role === "M" ? "#ff4d6d" : "#4d79ff",
-    color: "white",
-    fontWeight: "bold"
+    display: "flex",
+    gap: "10px",
+    zIndex: 1000
   }}
 >
-  {role}
-</button>
+  {/* ROLE BUTTON */}
+  <button
+    onClick={() => setRole(role === "M" ? "K" : "M")}
+    style={{
+      padding: "10px 15px",
+      borderRadius: 10,
+      border: "none",
+      cursor: "pointer",
+      background: theme[role].accent,
+      color: "white",
+      fontWeight: "bold"
+    }}
+  >
+    {role}
+  </button>
+
+  {/* SECRET BUTTON */}
+  <button
+    onClick={() => setShowSecret(true)}
+    style={{
+      padding: "10px 15px",
+      borderRadius: 10,
+      border: "none",
+      cursor: "pointer",
+      background: "rgba(255,255,255,0.7)",
+      backdropFilter: "blur(10px)",
+      fontWeight: "bold"
+    }}
+  >
+    💌
+  </button>
+</div>
 
 {/* SECRET */}
 <AnimatePresence>
@@ -543,14 +779,25 @@ const updateNote = async (value) => {
 
       {/* VIEW BOTH NOTES */}
       <div style={{ display: "flex", gap: 40, marginTop: 20 }}>
-        <div style={{ color: "white" }}>
+        
+        <div style={{ color: "#224f63", fontSize: "20px" }}>
           <h3>M Note</h3>
-          <p>{secretNotes.M || "..."}</p>
+          <p style={{
+          whiteSpace: "pre-wrap",
+          wordBreak: "break-word"
+          }}>
+          {secretNotes.M || "..."}
+          </p>
         </div>
 
-        <div style={{ color: "white" }}>
+        <div style={{ color: "#ca3662", fontSize: "20px" }}>
           <h3>K Note</h3>
-          <p>{secretNotes.K || "..."}</p>
+          <p style={{
+          whiteSpace: "pre-wrap",
+          wordBreak: "break-word"
+          }}>
+          {secretNotes.K || "..."}
+          </p>
         </div>
       </div>
 
@@ -560,13 +807,14 @@ const updateNote = async (value) => {
         onChange={(e) => updateNote(e.target.value)}
         style={{
           width: "100%",
-          maxWidth: 600,
-          height: 300,
+          maxWidth: 200,
+          height: 100,
           padding: 15,
           borderRadius: 15,
           border: "none",
           outline: "none",
-          marginTop: 20
+          marginTop: 20,
+          whiteSpace: "pre-wrap"
         }}
       />
 
@@ -586,7 +834,7 @@ const updateNote = async (value) => {
   )}
 </AnimatePresence>
 
-      <Footer onOpenSecret={() => setShowSecret(true)} />
+      <Footer/>
     </main>
   );
 }
