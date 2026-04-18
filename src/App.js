@@ -15,36 +15,9 @@ import {
 
 // ================= NAVBAR =================
 function Navbar() {
-  const audioRef = useRef(null);
-  const [playing, setPlaying] = useState(false);
-  const [started, setStarted] = useState(false);
-
-  const songs = [
-    { title: "Espresso", src: "/espresso.mp3" },
-    { title: "Needy", src: "/needy.mp3" },
-    { title: "Paragraphs", src: "/paragraphs.mp3" },
-    { title: "Seasons", src: "/seasons.mp3" },
-    { title: "Tiptoe", src: "/tiptoe.mp3" }
-  ];
-
-  const [currentSong, setCurrentSong] = useState(0);
-
-  const startMusic = () => {
-    if (!started && audioRef.current) {
-      audioRef.current.play().catch(() => {});
-      setPlaying(true);
-      setStarted(true);
-    }
-  };
-
   return (
     <>
-      <audio ref={audioRef} loop>
-        <source src={songs[currentSong].src} type="audio/mpeg" />
-      </audio>
-
-      <nav
-        onClick={startMusic}
+      <nav 
         style={{
           position: "fixed",
           top: 0,
@@ -59,107 +32,8 @@ function Navbar() {
           zIndex: 1000,
           borderBottom: "1px solid rgba(255,255,255,0.3)",
           fontFamily: "'Minimo', sans-serif"
-        }}
-      >
+        }}>
         <a href="#home">🏠︎ Home</a>
-        {/* 🎵 SONG SELECTOR */}
-        <select
-          value={currentSong}
-          onChange={(e) => {
-            const index = Number(e.target.value);
-            setCurrentSong(index);
-
-            const audio = audioRef.current;
-            audio.src = songs[index].src;
-            audio.play();
-            setPlaying(true);
-          }}
-          onClick={(e) => e.stopPropagation()}
-          style={{
-            padding: "5px 10px",
-            borderRadius: "8px",
-            border: "none",
-            outline: "none"
-          }}
-        >
-          {songs.map((song, i) => (
-            <option key={i} value={i}>
-              {song.title}
-            </option>
-          ))}
-        </select>
-
-        {/* ▶ PLAY / PAUSE */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-
-            const audio = audioRef.current;
-
-            if (!playing) {
-              audio.src = songs[currentSong].src;
-              audio.play();
-            } else {
-              audio.pause();
-            }
-
-            setPlaying(!playing);
-          }}
-          onMouseEnter={(e) => {
-          e.target.style.transform = "scale(1.05)";
-          }}
-          onMouseLeave={(e) => {
-            e.target.style.transform = "scale(1)";
-          }}
-          style={{
-          transition: "0.2s ease",
-          padding: "2px 8px",
-          borderRadius: "10px",
-          border: "none",
-          cursor: "pointer",
-          fontSize: "18px",
-          background: "rgba(255,255,255,0.8)",
-          backdropFilter: "blur(10px)",
-          fontFamily: "'Minimo', sans-serif"
-          }}
-        >
-          {playing ? "Pause ⏸" : "Play ▶"}
-        </button>
-
-        {/* ⏭ NEXT */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-
-            const next = (currentSong + 1) % songs.length;
-            setCurrentSong(next);
-
-            const audio = audioRef.current;
-            audio.src = songs[next].src;
-            audio.play();
-
-            setPlaying(true);
-          }}
-          onMouseEnter={(e) => {
-          e.target.style.transform = "scale(1.05)";
-          }}
-          onMouseLeave={(e) => {
-            e.target.style.transform = "scale(1)";
-          }}
-          style={{
-          transition: "0.2s ease",
-          padding: "2px 8px",
-          borderRadius: "10px",
-          border: "none",
-          cursor: "pointer",
-          fontSize: "18px",
-          background: "rgba(255,255,255,0.8)",
-          backdropFilter: "blur(10px)",
-          fontFamily: "'Minimo', sans-serif"
-          }}
-        >
-          Next ⏭
-        </button>
       </nav>
     </>
   );
@@ -234,6 +108,27 @@ function createBurst(x, y) {
 
 // ================= MAIN APP =================
 export default function App() {
+  const audioRef = useRef(null);
+const [playing, setPlaying] = useState(false);
+const [started, setStarted] = useState(false);
+
+const songs = [
+  { title: "Espresso", src: "/espresso.mp3" },
+  { title: "Needy", src: "/needy.mp3" },
+  { title: "Paragraphs", src: "/paragraphs.mp3" },
+  { title: "Seasons", src: "/seasons.mp3" },
+  { title: "Tiptoe", src: "/tiptoe.mp3" }
+];
+
+const [currentSong, setCurrentSong] = useState(0);
+
+const startMusic = () => {
+  if (!started && audioRef.current) {
+    audioRef.current.play().catch(() => {});
+    setPlaying(true);
+    setStarted(true);
+  }
+};
   const [moments, setMoments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [bursts, setBursts] = useState([]);
@@ -535,6 +430,111 @@ const cuteInput = {
   <h2 style={{ fontSize: "30px", marginTop: "10px" }}>
     We've been together for {getDaysTogether()} days 💕
   </h2>
+  <audio ref={audioRef} loop>
+  <source src={songs[currentSong].src} type="audio/mpeg" />
+</audio>
+
+<div onClick={startMusic} style={{ marginTop: "20px", display: "flex", gap: "10px", alignItems: "center" }}>
+
+  {/* 🎵 SONG SELECTOR */}
+        <select
+          value={currentSong}
+          onChange={(e) => {
+            const index = Number(e.target.value);
+            setCurrentSong(index);
+
+            const audio = audioRef.current;
+            audio.src = songs[index].src;
+            audio.play();
+            setPlaying(true);
+          }}
+          onClick={(e) => e.stopPropagation()}
+          style={{
+            padding: "5px 10px",
+            borderRadius: "8px",
+            border: "none",
+            outline: "none"
+          }}
+        >
+          {songs.map((song, i) => (
+            <option key={i} value={i}>
+              {song.title}
+            </option>
+          ))}
+        </select>
+
+        {/* ▶ PLAY / PAUSE */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+
+            const audio = audioRef.current;
+
+            if (!playing) {
+              audio.src = songs[currentSong].src;
+              audio.play();
+            } else {
+              audio.pause();
+            }
+
+            setPlaying(!playing);
+          }}
+          onMouseEnter={(e) => {
+          e.target.style.transform = "scale(1.05)";
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.transform = "scale(1)";
+          }}
+          style={{
+          transition: "0.2s ease",
+          padding: "2px 8px",
+          borderRadius: "10px",
+          border: "none",
+          cursor: "pointer",
+          fontSize: "18px",
+          background: "rgba(255,255,255,0.8)",
+          backdropFilter: "blur(10px)",
+          fontFamily: "'Minimo', sans-serif"
+          }}
+        >
+          {playing ? "Pause ⏸" : "Play ▶"}
+        </button>
+
+        {/* ⏭ NEXT */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+
+            const next = (currentSong + 1) % songs.length;
+            setCurrentSong(next);
+
+            const audio = audioRef.current;
+            audio.src = songs[next].src;
+            audio.play();
+
+            setPlaying(true);
+          }}
+          onMouseEnter={(e) => {
+          e.target.style.transform = "scale(1.05)";
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.transform = "scale(1)";
+          }}
+          style={{
+          transition: "0.2s ease",
+          padding: "2px 8px",
+          borderRadius: "10px",
+          border: "none",
+          cursor: "pointer",
+          fontSize: "18px",
+          background: "rgba(255,255,255,0.8)",
+          backdropFilter: "blur(10px)",
+          fontFamily: "'Minimo', sans-serif"
+          }}
+        >
+          Next ⏭
+        </button>
+        </div>
 </div>
       </section>
 
