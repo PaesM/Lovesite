@@ -434,7 +434,7 @@ const cuteInput = {
   <source src={songs[currentSong].src} type="audio/mpeg" />
 </audio>
 
-<div onClick={startMusic} style={{ marginTop: "20px", display: "flex", gap: "10px", alignItems: "center" }}>
+<div onClick={startMusic} style={{  marginLeft: "100px", marginTop: "20px", display: "flex", gap: "10px", alignItems: "center" }}>
 
   {/* 🎵 SONG SELECTOR */}
         <select
@@ -716,7 +716,7 @@ const cuteInput = {
       <div
   style={{
     position: "fixed",
-    top: 15,
+    top: 8,
     right: 15,
     display: "flex",
     gap: "10px",
